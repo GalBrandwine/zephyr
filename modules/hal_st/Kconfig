@@ -63,6 +63,9 @@ config USE_STDC_ILPS22QS
 config USE_STDC_ISM303DAC
 	bool
 
+config USE_STDC_ISM330BX
+         bool
+		 
 config USE_STDC_ISM330DHCX
 	bool
 
