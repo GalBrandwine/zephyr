@@ -8,16 +8,23 @@ menuconfig ISM330BX
 	default y
 	depends on DT_HAS_ST_ISM330BX_ENABLED
 	depends on ZEPHYR_HAL_ST_MODULE
-	# depends on PM_DEVICE //TODO: Do I want to have PM for this driver? or is it the user responsibility?
 	select I2C if $(dt_compat_on_bus,$(DT_COMPAT_ST_ISM330BX),i2c)
 	select SPI if $(dt_compat_on_bus,$(DT_COMPAT_ST_ISM330BX),spi)
 	select HAS_STMEMSC
-	select USE_STDC_ISM330BX
+	select PM_DEVICE
 	help
 	  Enable driver for ISM330BX accelerometer and gyroscope
 	  sensor.
 
 if ISM330BX
+
+module = ISM330BX
+module-str = ism330bx
+source "subsys/logging/Kconfig.template.log_config"
+
+config USE_STDC_ISM330BX
+	bool
+	default y
 
 choice ISM330BX_TRIGGER_MODE
 	prompt "Trigger mode"
@@ -58,6 +65,20 @@ config ISM330BX_THREAD_STACK_SIZE
 	help
 	  Stack size of thread used by the driver to handle interrupts.
 
+config ISM330BX_6D_ORIENTATION_DETECTION
+	bool "6D orientation detection (via interrupt)"
+	help
+	  Enable 6D orientation detection via interrupt.
+
+config ISM330BX_SIGNIFICANT_MOTION_DETECTION
+	bool "Significant motion detection (via interrupt)"
+	help
+	  Enable 6D orientation detection via interrupt.
+config ISM330BX_WAKEUP_DETECTION
+	bool "wakeup detection (via interrupt)"
+	help
+	  Enable Wakeup detection based on acceleration measurements.
+
 endif # ISM330BX_TRIGGER
 
 config ISM330BX_ENABLE_TEMP
@@ -65,12 +86,15 @@ config ISM330BX_ENABLE_TEMP
 	help
 	  Enable/disable temperature
 
+
+
 config ISM330BX_SENSORHUB
 	bool "I2C sensorhub feature"
 	help
 	  Enable/disable internal sensorhub. You can enable
 	  a maximum of two external sensors (if more than two are enabled
 	  the system would enumerate only the first two found)
+
 
 if ISM330BX_SENSORHUB
 
@@ -92,6 +116,7 @@ config ISM330BX_EXT_LPS22DF
 	default y
 
 endif # ISM330BX_SENSORHUB
+
 
 endif # ISM330BX
 

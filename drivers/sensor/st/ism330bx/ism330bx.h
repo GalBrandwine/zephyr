@@ -17,7 +17,6 @@
 #include <zephyr/sys/util.h>
 #include <stmemsc.h>
 #include "ism330bx_reg.h"
-
 #if DT_ANY_INST_ON_BUS_STATUS_OKAY(spi)
 #include <zephyr/drivers/spi.h>
 #endif /* DT_ANY_INST_ON_BUS_STATUS_OKAY(spi) */
@@ -75,6 +74,11 @@ struct ism330bx_data {
 	uint32_t acc_gain;
 	int16_t gyro[3];
 	uint32_t gyro_gain;
+	ism330bx_all_sources_t all_sources;
+	/// @brief accel ODR
+	uint16_t acc_odr;
+	/// @brief gyro ODR
+	uint16_t gyro_odr;
 #if defined(CONFIG_ISM330BX_ENABLE_TEMP)
 	int16_t temp_sample;
 #endif
@@ -102,6 +106,18 @@ struct ism330bx_data {
 	struct gpio_dt_spec *drdy_gpio;
 
 	struct gpio_callback gpio_cb;
+#if defined(CONFIG_ISM330BX_WAKEUP_DETECTION)
+	sensor_trigger_handler_t handler_drdy_wake_up;
+	const struct sensor_trigger *trig_drdy_wake_up;
+#endif /*CONFIG_ISM330BX_WAKEUP_DETECTION*/
+#if defined(CONFIG_ISM330BX_SIGNIFICANT_MOTION_DETECTION)
+	sensor_trigger_handler_t handler_drdy_sig_mot;
+	const struct sensor_trigger *trig_drdy_sig_mot;
+#endif
+#if defined(CONFIG_ISM330BX_6D_ORIENTATION_DETECTION)
+	sensor_trigger_handler_t handler_drdy_d6d;
+	const struct sensor_trigger *trig_drdy_d6d;
+#endif /* CONFIG_ISM330BX_6D_ORIENTATION_DETECTION */
 	sensor_trigger_handler_t handler_drdy_acc;
 	const struct sensor_trigger *trig_drdy_acc;
 	sensor_trigger_handler_t handler_drdy_gyr;
