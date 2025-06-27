@@ -28,7 +28,7 @@ static K_CONDVAR_DEFINE(wait_start);
 STRUCT_SECTION_START_EXTERN(net_socket_service_desc);
 STRUCT_SECTION_END_EXTERN(net_socket_service_desc);
 
-static struct service {
+static struct service_context {
 	struct zsock_pollfd events[CONFIG_ZVFS_POLL_MAX];
 	int count;
 } ctx;
@@ -71,9 +71,9 @@ int z_impl_net_socket_service_register(const struct net_socket_service_desc *svc
 		goto out;
 	}
 
-	if (fds == NULL) {
-		cleanup_svc_events(svc);
-	} else {
+	cleanup_svc_events(svc);
+
+	if (fds != NULL) {
 		if (len > svc->pev_len) {
 			NET_DBG("Too many file descriptors, "
 				"max is %d for service %p",

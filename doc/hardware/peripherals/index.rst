@@ -38,7 +38,6 @@ Peripherals
    i3c.rst
    i2c.rst
    ipm.rst
-   kscan.rst
    led.rst
    mdio.rst
    mipi_dbi.rst
@@ -55,6 +54,7 @@ Peripherals
    retained_mem.rst
    sdhc.rst
    sensor/index.rst
+   sent.rst
    spi.rst
    stepper.rst
    smbus.rst
