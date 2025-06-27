@@ -6,12 +6,8 @@
 &spi1 {
 	compatible = "nordic,nrf-spim";
 	status = "okay";
-	// cs-gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
-    // 	pinctrl-0 = <&ism330bx_default>;
-// 	pinctrl-1 = <&ism330bx_sleep>;
-// 	pinctrl-names = "default", "sleep";
-    cs-gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
-    	pinctrl-0 = <&ism330bx_default>;
+    cs-gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
+    pinctrl-0 = <&ism330bx_default>;
 	pinctrl-1 = <&ism330bx_sleep>;
 	pinctrl-names = "default", "sleep";
 
@@ -22,61 +18,25 @@
       	accel-odr = <0>;    // ISM330BX_ACCL_DT_ODR_OFF
       	gyro-range = <0>;   // ISM330BX_GYRO_DT_FS_125DPS
       	gyro-odr = <0>;     // ISM330BX_GYRO_DT_ODR_OFF
-        // int1-gpios = <&gpio1 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
 		spi-max-frequency = <8000000>;
 	};
 };
 
-// &spi1 {
-// 	status = "okay";
-// 	pinctrl-0 = <&ism330bx_default>;
-// 	pinctrl-1 = <&ism330bx_sleep>;
-// 	pinctrl-names = "default", "sleep";
-// 	compatible = "nordic,nrf-spim";
-// 	cs-gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
-// 	ism330bx@0 {
-// 		compatible = "st,ism330bx";
-// 		reg = <0>;
-// 		accel-range = <ISM330BX_ACCL_DT_FS_2G>;
-//       	accel-odr = <ISM330BX_ACCL_DT_ODR_OFF>;
-//       	gyro-range = <ISM330BX_GYRO_DT_FS_125DPS>;
-//       	gyro-odr = <ISM330BX_GYRO_DT_ODR_OFF>;
 
-// 		int1-gpios = <&gpio1 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
-// 		// int2_gpios = <&gpio1 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // TODO: there's no usecase for this pin. Maybe delete?
-// 		power_resources = <&boost_on>, <&sensors_on>; // boost_on should be enabled before sensors_on
-// 		spi-max-frequency = <8000000>;
-// 	};
-// };
 &pinctrl {
-    spi1_default: spi1_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 0, 28)>,					 
-                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
-                    <NRF_PSEL(SPIM_MISO, 0, 31)>;
-        };
-    };
-    spi1_sleep: spi1_sleep {
-        group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 0, 28)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
-                    <NRF_PSEL(SPIM_MISO, 0, 31)>;
-            low-power-enable;
-        };
-    };
     ism330bx_default: ism330bx_default {
         group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 1, 11)>,
-                    <NRF_PSEL(SPIM_MOSI, 1, 12)>,
-                    <NRF_PSEL(SPIM_MISO, 1, 13)>;
+            psels = <NRF_PSEL(SPIM_SCK, 0, 30)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 28)>;
         };
     };
 
     ism330bx_sleep: ism330bx_sleep {
         group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 1, 11)>,
-                    <NRF_PSEL(SPIM_MOSI, 1, 12)>,
-                    <NRF_PSEL(SPIM_MISO, 1, 13)>;
+            psels = <NRF_PSEL(SPIM_SCK, 0, 30)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 28)>;
             low-power-enable;
         };
     };
