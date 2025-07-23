@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 zephyr_library()
-zephyr_include_directories(include) # Expose ism330bx_defs.h for the device tree
 zephyr_library_sources_ifdef(CONFIG_ISM330BX ism330bx.c)
 zephyr_library_sources_ifdef(CONFIG_ISM330BX_LOG_LEVEL_DBG ism330bx_devtools.c)
 zephyr_library_sources_ifdef(CONFIG_ISM330BX_SENSORHUB  ism330bx_shub.c)

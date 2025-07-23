@@ -28,7 +28,7 @@ enum ism330bx_interrupt_pins {
 	orientation_changed,
 	drdy_accel,
 	drdy_gyro
-} interrupt_pins;
+};
 
 void set_interrupt_pin(const struct device *dev, enum ism330bx_interrupt_pins interrupt_pin);
 
