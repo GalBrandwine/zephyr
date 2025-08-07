@@ -10,14 +10,14 @@ Overview
 
 This sample sets the ISM330BX accelerometer and gyroscope to 60Hz
 and enable a trigger on data ready. It displays on the console the
-values for accelerometer and gyroscope, plus optionally the values of
-any magnetometer or pressure sensor attached to it (sensorhub function).
+values for accelerometer and gyroscope.
 
 
 Requirements
 ************
 
 This sample uses the ISM330BX sensor controlled using the I2C or SPI interface.
+This sample uses a special devkit board with a fet powering the ism330bx. And a special pin - ism330bx_en for toggling power.
 
 
 References
@@ -30,37 +30,6 @@ Building and Running
 
  This project outputs sensor data to the console. It requires an ISM330BX
  sensor. This project was tested using nrf52840dk and 
-
-.. Building on ArgonKey board
-.. ==========================
-
-.. .. zephyr-app-commands::
-..    :zephyr-app: samples/sensor/ism330bx
-..    :host-os: unix
-..    :board: 96b_argonkey
-..    :goals: build
-..    :compact:
-
-.. Building on disco_l475_iot1 board
-.. =================================
-
-.. .. zephyr-app-commands::
-..    :zephyr-app: samples/sensor/lsm6dsl
-..    :host-os: unix
-..    :board: disco_l475_iot1
-..    :goals: build
-..    :compact:
-
-Building on nrf52840dk/nrf52840 board with x-nucleo-iks01a2 shield
-==================================================================
-
-.. zephyr-app-commands::
-   :zephyr-app: samples/sensor/lsm6dsl
-   :host-os: unix
-   :board: nrf52840dk/nrf52840
-   :shield: x_nucleo_iks01a2
-   :goals: build
-   :compact:
 
 Sample Output
 =============

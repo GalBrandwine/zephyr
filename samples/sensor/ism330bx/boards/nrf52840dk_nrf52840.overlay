@@ -1,72 +1,62 @@
+#include "zephyr/dt-bindings/sensor/ism330bx.h"
+/ {
+	model = "ISM sample board";
+
+  ism330bx_en: ism330bx_en {
+     status = "okay";
+     compatible = "nordic,gpio-pins";
+    gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>; // Example: GPIO port 0, pin 13, active high
+};
+};
 
 
-// &gpio0 {status = "okay";};
-// &i2c1 { status = "disabled";};
-// &spi3 {status = "disabled";};
+&gpio1 {
+  status = "okay";
+};
 
-&i2c0 { status = "disabled";}; // Only one of them 
-// &spi0 {
-// 	status = "okay";
-//     compatible = "nordic,nrf-spim";
-// 	cs-gpios = <&gpio1 07 GPIO_ACTIVE_LOW>;
-// 	pinctrl-0 = <&spi0_default>;
-// 	bme280@0 {
-// 		compatible = "bosch,bme280";
-// 		reg = <0>;
-// 		spi-max-frequency = <1000000>; /* conservatively set to 1MHz */
-// 	};
-// };
-&spi0 {
-	compatible = "nordic,nrf-spim";
+
+
+&spi1 {
 	status = "okay";
-    cs-gpios = <&gpio1 07 GPIO_ACTIVE_LOW>;
-    // cs-gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
-    pinctrl-0 = <&spi0_default>;
-	// pinctrl-1 = <&spi0_sleep>;
+	pinctrl-0 = <&ism330bx_default>;
+	pinctrl-1 = <&ism330bx_sleep>;
 	pinctrl-names = "default", "sleep";
-
+	compatible = "nordic,nrf-spim";
+	cs-gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
 	ism330bx@0 {
 		compatible = "st,ism330bx";
 		reg = <0>;
-        // accel-range = <0>;  // ISM330BX_ACCL_DT_FS_2G
-      	// accel-odr = <0>;    // ISM330BX_ACCL_DT_ODR_OFF
-      	// gyro-range = <0>;   // ISM330BX_GYRO_DT_FS_125DPS
-      	// gyro-odr = <0>;     // ISM330BX_GYRO_DT_ODR_OFF
-		spi-max-frequency = <1000000>;
+        accel-range = <ISM330BX_ACCL_DT_FS_2G>;
+      	accel-odr = <ISM330BX_ACCL_DT_ODR_OFF>;
+      	gyro-range = <ISM330BX_GYRO_DT_FS_125DPS>;
+      	gyro-odr = <ISM330BX_GYRO_DT_ODR_OFF>;
+
+		int1-gpios = <&gpio1 14 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+		// int2-gpios = <&gpio1 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>; // TODO: Disable this pin in the driver init()
+		// power_resources = <&ism330bx_on>;
+		spi-max-frequency = <8000000>;
 	};
 };
 
 
-&pinctrl {
-    spi0_default: spi0_default {
-		group1 {
-			psels = <NRF_PSEL(SPIM_SCK, 0, 31)>,
-				<NRF_PSEL(SPIM_MOSI, 0, 30)>,
-				<NRF_PSEL(SPIM_MISO, 1, 8)>;
-		};
-	};
-    	spi0_sleep: spi0_sleep {
-		group1 {
-			psels = <NRF_PSEL(SPIM_SCK, 0, 31)>,
-				<NRF_PSEL(SPIM_MOSI, 0, 30)>,
-				<NRF_PSEL(SPIM_MISO, 1, 8)>;
-			low-power-enable;
-		};
-	};
+
+
+&pinctrl { 
+    // ism330bx
     ism330bx_default: ism330bx_default {
         group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 0, 30)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
-                    <NRF_PSEL(SPIM_MISO, 0, 28)>;
+            psels = <NRF_PSEL(SPIM_SCK, 1, 11)>,
+                    <NRF_PSEL(SPIM_MOSI, 1, 12)>,
+                    <NRF_PSEL(SPIM_MISO, 1, 13)>;
         };
     };
 
     ism330bx_sleep: ism330bx_sleep {
         group1 {
-            psels = <NRF_PSEL(SPIM_SCK, 0, 30)>,
-                    <NRF_PSEL(SPIM_MOSI, 0, 29)>,
-                    <NRF_PSEL(SPIM_MISO, 0, 28)>;
+            psels = <NRF_PSEL(SPIM_SCK, 1, 11)>,
+                    <NRF_PSEL(SPIM_MOSI, 1, 12)>,
+                    <NRF_PSEL(SPIM_MISO, 1, 13)>;
             low-power-enable;
         };
-    };
+    }; 
 };
