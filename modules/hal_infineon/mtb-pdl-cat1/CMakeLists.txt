@@ -1,13 +1,13 @@
-# Copyright (c) 2023 Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation
+# Copyright (c) 2025 Infineon Technologies AG,
+# or an affiliate of Infineon Technologies AG.
 #
 # SPDX-License-Identifier: Apache-2.0
 
-set(pdl_dir             ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1)
-set(pdl_drv_dir         ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/drivers)
-set(pdl_dev_cat1a_dir   ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1A)
-set(pdl_dev_cat1b_dir   ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1B)
-set(pdl_dev_cat1c_dir   ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1C)
+set(pdl_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1)
+set(pdl_drv_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/drivers)
+set(pdl_dev_cat1a_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1A)
+set(pdl_dev_cat1b_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1B)
+set(pdl_dev_cat1c_dir ${ZEPHYR_HAL_INFINEON_MODULE_DIR}/mtb-pdl-cat1/devices/COMPONENT_CAT1C)
 
 
 # Generate PDL specific SOC defines
@@ -101,6 +101,8 @@ if(CONFIG_SOC_FAMILY_INFINEON_CAT1B)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_syspm_v2.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_syspm_btss.c)
   zephyr_library_sources(${pdl_drv_dir}/source/cy_syspm_ppu.c)
+  zephyr_library_sources(${pdl_drv_dir}/source/cy_ppc.c)
+  zephyr_library_sources(${pdl_drv_dir}/source/cy_ms_ctl.c)
   zephyr_library_sources(${pdl_drv_dir}/source/ppu_v1.c)
 endif()
 zephyr_library_sources(${pdl_drv_dir}/source/cy_syslib.c)

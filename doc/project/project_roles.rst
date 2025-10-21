@@ -137,7 +137,9 @@ in addition to those listed for Contributors and Collaborators:
   the TSC
 * Responsibility to ensure all contributions of the project have been reviewed
   within reasonable time.
-* Responsibility to enforce the code of conduct.
+* Responsibility to enforce the Code of Conduct. As leaders in the community,
+  maintainers are expected to be role models in upholding the project's code
+  of conduct and creating a welcoming and inclusive environment for everyone.
 * Responsibility to triage static analysis issues in their code area.
   See :ref:`static_analysis`.
 
@@ -290,7 +292,7 @@ Roles / Permissions
     Supportive Roles QA/Validation                                      x                        x
         ..           DevOps                   **x**
         ..           System Admin             **x**                                      x
-        ..           Release Engineering      **x**      **x**          x
+        ..           Release Engineering                 **x**          x
 
     ================ =================== =========== ================ =========== =========== ============
 

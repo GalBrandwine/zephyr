@@ -551,6 +551,22 @@ only the image from this domain::
 
 .. _west-debugging:
 
+Configuration Options
+=====================
+
+You can :ref:`configure <west-config-cmd>` ``west flash`` using these options.
+
+.. NOTE: docs authors: keep this table sorted alphabetically
+
+.. list-table::
+   :widths: 10 30
+   :header-rows: 1
+
+   * - Option
+     - Description
+   * - ``flash.rebuild``
+     - Boolean, default ``true``. If ``false``, do not rebuild on west flash.
+
 Debugging: ``west debug``, ``west debugserver``
 ***********************************************
 
@@ -683,6 +699,25 @@ to debug::
 
 .. _west-runner:
 
+Configuration Options
+=====================
+
+You can :ref:`configure <west-config-cmd>` ``west debug`` and
+:ref:`configure <west-config-cmd>` ``west debugserver`` using these options.
+
+.. NOTE: docs authors: keep this table sorted alphabetically
+
+.. list-table::
+   :widths: 10 30
+   :header-rows: 1
+
+   * - Option
+     - Description
+   * - ``debug.rebuild``
+     - Boolean, default ``true``. If ``false``, do not rebuild on west debug.
+   * - ``debugserver.rebuild``
+     - Boolean, default ``true``. If ``false``, do not rebuild on west debugserver.
+
 Flash and debug runners
 ***********************
 
@@ -765,7 +800,7 @@ From that point on Renode can be used normally in both console and window modes.
 For details on using Renode see `Renode - documentation`_.
 
 .. _Renode - documentation:
-   http://docs.renode.io
+   https://docs.renode.io
 
 Runner-Specific Overrides
 =========================

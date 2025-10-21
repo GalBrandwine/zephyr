@@ -759,7 +759,7 @@ static int gmap_ac_cap_unicast_start(const struct gmap_unicast_ac_param *param,
 			 * location bit accordingly
 			 */
 			if (param->conn_cnt > 1U || param->snk_cnt[i] > 1U) {
-				const int err = bt_audio_codec_cfg_set_chan_allocation(
+				err = bt_audio_codec_cfg_set_chan_allocation(
 					stream_param->codec_cfg, (enum bt_audio_location)BIT(i));
 
 				if (err < 0) {
@@ -785,7 +785,7 @@ static int gmap_ac_cap_unicast_start(const struct gmap_unicast_ac_param *param,
 			 * location bit accordingly
 			 */
 			if (param->conn_cnt > 1U || param->src_cnt[i] > 1U) {
-				const int err = bt_audio_codec_cfg_set_chan_allocation(
+				err = bt_audio_codec_cfg_set_chan_allocation(
 					stream_param->codec_cfg, (enum bt_audio_location)BIT(i));
 
 				if (err < 0) {
@@ -900,7 +900,7 @@ static int gmap_ac_unicast(const struct gmap_unicast_ac_param *param,
 	return 0;
 }
 
-static void unicast_audio_stop(struct bt_cap_unicast_group *unicast_group)
+static void cap_initiator_unicast_audio_stop(struct bt_cap_unicast_group *unicast_group)
 {
 	struct bt_cap_unicast_audio_stop_param param;
 	int err;
@@ -998,7 +998,7 @@ static void test_gmap_ugg_unicast_ac(const struct gmap_unicast_ac_param *param)
 		WAIT_FOR_FLAG(flag_audio_received);
 	}
 
-	unicast_audio_stop(unicast_group);
+	cap_initiator_unicast_audio_stop(unicast_group);
 
 	unicast_group_delete(unicast_group);
 	unicast_group = NULL;
@@ -1062,25 +1062,6 @@ static void setup_extended_adv_data(struct bt_cap_broadcast_source *source,
 	err = bt_le_per_adv_set_data(adv, &per_ad, 1);
 	if (err != 0) {
 		FAIL("Failed to set periodic advertising data: %d\n", err);
-		return;
-	}
-}
-
-static void start_extended_adv(struct bt_le_ext_adv *adv)
-{
-	int err;
-
-	/* Start extended advertising */
-	err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
-	if (err) {
-		FAIL("Failed to start extended advertising: %d\n", err);
-		return;
-	}
-
-	/* Enable Periodic Advertising */
-	err = bt_le_per_adv_start(adv);
-	if (err) {
-		FAIL("Failed to enable periodic advertising: %d\n", err);
 		return;
 	}
 }
@@ -1222,7 +1203,7 @@ static int test_gmap_ugg_broadcast_ac(const struct gmap_broadcast_ac_param *para
 
 	broadcast_audio_start(broadcast_source, adv);
 	setup_extended_adv_data(broadcast_source, adv);
-	start_extended_adv(adv);
+	start_broadcast_adv(adv);
 
 	/* Wait for all to be started */
 	printk("Waiting for broadcast_streams to be started\n");

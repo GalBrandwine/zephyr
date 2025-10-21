@@ -266,6 +266,11 @@ static int stm32_clock_control_configure(const struct device *dev,
 		return err;
 	}
 
+	if (pclken->enr == NO_SEL) {
+		/* Domain clock is fixed. Nothing to set. Exit */
+		return 0;
+	}
+
 	sys_clear_bits(DT_REG_ADDR(DT_NODELABEL(rcc)) + STM32_DT_CLKSEL_REG_GET(pclken->enr),
 		       STM32_DT_CLKSEL_MASK_GET(pclken->enr) <<
 			STM32_DT_CLKSEL_SHIFT_GET(pclken->enr));
@@ -923,12 +928,11 @@ int stm32_clock_control_init(const struct device *dev)
 
 	ARG_UNUSED(dev);
 
-	/* For now, enable clocks (including low_power ones) of all RAM */
-	uint32_t all_ram = LL_MEM_AXISRAM1 | LL_MEM_AXISRAM2 | LL_MEM_AXISRAM3 | LL_MEM_AXISRAM4 |
-			   LL_MEM_AXISRAM5 | LL_MEM_AXISRAM6 | LL_MEM_AHBSRAM1 | LL_MEM_AHBSRAM2 |
+	/* For now, enable clocks (including low_power ones) of misc RAM */
+	uint32_t misc_ram = LL_MEM_AXISRAM1 | LL_MEM_AXISRAM2 | LL_MEM_AHBSRAM1 | LL_MEM_AHBSRAM2 |
 			   LL_MEM_BKPSRAM | LL_MEM_FLEXRAM | LL_MEM_CACHEAXIRAM | LL_MEM_VENCRAM;
-	LL_MEM_EnableClock(all_ram);
-	LL_MEM_EnableClockLowPower(all_ram);
+	LL_MEM_EnableClock(misc_ram);
+	LL_MEM_EnableClockLowPower(misc_ram);
 
 	/* Set up individual enabled clocks */
 	set_up_fixed_clock_sources();

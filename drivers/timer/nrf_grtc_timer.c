@@ -70,6 +70,7 @@ static struct k_spinlock lock;
 static uint64_t last_count; /* Time (SYSCOUNTER value) @last sys_clock_announce() */
 static atomic_t int_mask;
 static uint8_t ext_channels_allocated;
+static uint64_t grtc_start_value;
 static nrfx_grtc_channel_t system_clock_channel_data = {
 	.handler = sys_clock_timeout_handler,
 	.p_context = NULL,
@@ -334,18 +335,13 @@ int z_nrf_grtc_timer_capture_prepare(int32_t chan)
 
 int z_nrf_grtc_timer_capture_read(int32_t chan, uint64_t *captured_time)
 {
-	/* TODO: The implementation should probably go to nrfx_grtc and this
-	 *       should be just a wrapper for some nrfx_grtc_syscounter_capture_read.
-	 */
-
 	uint64_t capt_time;
 	nrfx_err_t result;
 
 	IS_CHANNEL_ALLOWED_ASSERT(chan);
 
-	/* TODO: Use `nrfy_grtc_sys_counter_enable_check` when available (NRFX-2480) */
-	if (NRF_GRTC->CC[chan].CCEN == GRTC_CC_CCEN_ACTIVE_Enable) {
-		/* If the channel is enabled (.CCEN), it means that there was no capture
+	if (nrfx_grtc_sys_counter_cc_enable_check(chan)) {
+		/* If the channel is enabled, it means that there was no capture
 		 * triggering event.
 		 */
 		return -EBUSY;
@@ -360,6 +356,11 @@ int z_nrf_grtc_timer_capture_read(int32_t chan, uint64_t *captured_time)
 	*captured_time = capt_time;
 
 	return 0;
+}
+
+uint64_t z_nrf_grtc_timer_startup_value_get(void)
+{
+	return grtc_start_value;
 }
 
 #if defined(CONFIG_POWEROFF) && defined(CONFIG_NRF_GRTC_START_SYSCOUNTER)
@@ -453,12 +454,27 @@ uint32_t sys_clock_elapsed(void)
 	return (uint32_t)(counter_sub(counter(), last_count) / CYC_PER_TICK);
 }
 
+#if !defined(CONFIG_GEN_SW_ISR_TABLE)
+ISR_DIRECT_DECLARE(nrfx_grtc_direct_irq_handler)
+{
+	nrfx_grtc_irq_handler();
+	ISR_DIRECT_PM();
+	return 1;
+}
+#endif
+
 static int sys_clock_driver_init(void)
 {
 	nrfx_err_t err_code;
 
+#if defined(CONFIG_GEN_SW_ISR_TABLE)
 	IRQ_CONNECT(DT_IRQN(GRTC_NODE), DT_IRQ(GRTC_NODE, priority), nrfx_isr,
 		    nrfx_grtc_irq_handler, 0);
+#else
+	IRQ_DIRECT_CONNECT(DT_IRQN(GRTC_NODE), DT_IRQ(GRTC_NODE, priority),
+			   nrfx_grtc_direct_irq_handler, 0);
+	irq_enable(DT_IRQN(GRTC_NODE));
+#endif
 
 #if defined(CONFIG_NRF_GRTC_TIMER_CLOCK_MANAGEMENT) && NRF_GRTC_HAS_CLKSEL
 #if defined(CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC)
@@ -489,11 +505,18 @@ static int sys_clock_driver_init(void)
 	}
 #endif /* CONFIG_NRF_GRTC_START_SYSCOUNTER */
 
+	last_count = (counter() / CYC_PER_TICK) * CYC_PER_TICK;
+	grtc_start_value = last_count;
 	int_mask = NRFX_GRTC_CONFIG_ALLOWED_CC_CHANNELS_MASK;
 	if (!IS_ENABLED(CONFIG_TICKLESS_KERNEL)) {
 		system_timeout_set_relative(CYC_PER_TICK);
 	}
 
+	return 0;
+}
+
+static int grtc_post_init(void)
+{
 #if defined(CONFIG_CLOCK_CONTROL_NRF)
 	static const enum nrf_lfclk_start_mode mode =
 		IS_ENABLED(CONFIG_SYSTEM_CLOCK_NO_WAIT)
@@ -567,5 +590,6 @@ int nrf_grtc_timer_clock_driver_init(void)
 	return sys_clock_driver_init();
 }
 #else
-SYS_INIT(sys_clock_driver_init, PRE_KERNEL_2, CONFIG_SYSTEM_CLOCK_INIT_PRIORITY);
+SYS_INIT(sys_clock_driver_init, EARLY, CONFIG_SYSTEM_CLOCK_INIT_PRIORITY);
+SYS_INIT(grtc_post_init, PRE_KERNEL_2, CONFIG_SYSTEM_CLOCK_INIT_PRIORITY);
 #endif

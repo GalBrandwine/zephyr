@@ -180,13 +180,15 @@ Connections and IOs
 Nucleo U385RG Board has 14 GPIO controllers. These controllers are responsible
 for pin muxing, input/output, pull-up, etc.
 
-For more details please refer to `STM32U385 User Manual`_.
+For more details please refer to `STM32U385RG board user manual`_.
 
 Default Zephyr Peripheral Mapping:
 ----------------------------------
 
 - DAC1_OUT1 : PA4
 - I2C1 SCL/SDA : PB6/PB7 (Arduino I2C)
+- FDCAN1_TX : PA12
+- FDCAN1_RX : PA11
 - LD4 : PA5
 - LPUART_1_TX : PA2
 - LPUART_1_RX : PA3
@@ -209,6 +211,13 @@ Serial Port
 
 Nucleo U385RG board has 4 U(S)ARTs, 1 LPUART. The Zephyr console output is assigned to
 USART1. Default settings are 115200 8N1.
+
+CAN
+---
+The STM32U385RG_Q does not have an onboard CAN transceiver. In
+order to use the CAN bus on the this board, an external CAN bus
+transceiver must be connected to ``PA11`` (``FDCAN1_RX``) and ``PA12``
+(``FDCAN1_TX``).
 
 
 Programming and Debugging
@@ -286,14 +295,14 @@ Note: Check the ``build/tfm`` directory to ensure that the commands required by 
 .. _NUCLEO_U385RG website:
   https://www.st.com/en/evaluation-tools/nucleo-u385rg.html
 
-.. _STM32U385 User Manual:
-   https://www.st.com/resource/en/user_manual/um3261-stm32u3-series-safety-manual-stmicroelectronics.pdf
+.. _STM32U385RG board user manual:
+   https://www.st.com/resource/en/user_manual/um3062-stm32u3u5-nucleo64-board-mb1841-stmicroelectronics.pdf
 
 .. _STM32U385RG on www.st.com:
    https://www.st.com/en/microcontrollers-microprocessors/stm32u385rg
 
 .. _STM32U385RG reference manual:
-   https://www.st.com/resource/en/reference_manual/rm0503-stm32u3-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
+   https://www.st.com/resource/en/reference_manual/rm0487-stm32u3-series-armbased-32bit-mcus-stmicroelectronics.pdf
 
 .. _STM32CubeProgrammer:
    https://www.st.com/en/development-tools/stm32cubeprog.html

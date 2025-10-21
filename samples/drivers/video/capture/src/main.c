@@ -22,6 +22,10 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
 #endif
 
+#if !DT_HAS_CHOSEN(zephyr_camera)
+#error No camera chosen in devicetree. Missing "--shield" or "--snippet video-sw-generator" flag?
+#endif
+
 #if DT_HAS_CHOSEN(zephyr_display)
 static inline int display_setup(const struct device *const display_dev, const uint32_t pixfmt)
 {
@@ -42,8 +46,8 @@ static inline int display_setup(const struct device *const display_dev, const ui
 	/* Set display pixel format to match the one in use by the camera */
 	switch (pixfmt) {
 	case VIDEO_PIX_FMT_RGB565:
-		if (capabilities.current_pixel_format != PIXEL_FORMAT_BGR_565) {
-			ret = display_set_pixel_format(display_dev, PIXEL_FORMAT_BGR_565);
+		if (capabilities.current_pixel_format != PIXEL_FORMAT_RGB_565) {
+			ret = display_set_pixel_format(display_dev, PIXEL_FORMAT_RGB_565);
 		}
 		break;
 	case VIDEO_PIX_FMT_XRGB32:
@@ -87,7 +91,6 @@ static inline void video_display_frame(const struct device *const display_dev,
 
 int main(void)
 {
-	struct video_buffer *buffers[CONFIG_VIDEO_BUFFER_POOL_NUM_MAX];
 	struct video_buffer *vbuf = &(struct video_buffer){};
 	const struct device *video_dev;
 	struct video_format fmt;
@@ -102,7 +105,6 @@ int main(void)
 	};
 #endif
 	unsigned int frame = 0;
-	size_t bsize;
 	int i = 0;
 	int err;
 
@@ -242,6 +244,7 @@ int main(void)
 
 	/* Set controls */
 	struct video_control ctrl = {.id = VIDEO_CID_HFLIP, .val = 1};
+	int tp_set_ret = -ENOTSUP;
 
 	if (IS_ENABLED(CONFIG_VIDEO_CTRL_HFLIP)) {
 		video_set_ctrl(video_dev, &ctrl);
@@ -254,7 +257,7 @@ int main(void)
 
 	if (IS_ENABLED(CONFIG_TEST)) {
 		ctrl.id = VIDEO_CID_TEST_PATTERN;
-		video_set_ctrl(video_dev, &ctrl);
+		tp_set_ret = video_set_ctrl(video_dev, &ctrl);
 	}
 
 #if DT_HAS_CHOSEN(zephyr_display)
@@ -272,27 +275,26 @@ int main(void)
 	}
 #endif
 
-	/* Size to allocate for each buffer */
-	if (caps.min_line_count == LINE_COUNT_HEIGHT) {
-		bsize = fmt.pitch * fmt.height;
-	} else {
-		bsize = fmt.pitch * caps.min_line_count;
+	/* Alloc video buffers and enqueue for capture */
+	if (caps.min_vbuf_count > CONFIG_VIDEO_BUFFER_POOL_NUM_MAX ||
+	    fmt.size > CONFIG_VIDEO_BUFFER_POOL_SZ_MAX) {
+		LOG_ERR("Not enough buffers or memory to start streaming");
+		return 0;
 	}
 
-	/* Alloc video buffers and enqueue for capture */
-	for (i = 0; i < ARRAY_SIZE(buffers); i++) {
+	for (i = 0; i < CONFIG_VIDEO_BUFFER_POOL_NUM_MAX; i++) {
 		/*
 		 * For some hardwares, such as the PxP used on i.MX RT1170 to do image rotation,
 		 * buffer alignment is needed in order to achieve the best performance
 		 */
-		buffers[i] = video_buffer_aligned_alloc(bsize, CONFIG_VIDEO_BUFFER_POOL_ALIGN,
-							K_FOREVER);
-		if (buffers[i] == NULL) {
+		vbuf = video_buffer_aligned_alloc(fmt.size, CONFIG_VIDEO_BUFFER_POOL_ALIGN,
+							K_NO_WAIT);
+		if (vbuf == NULL) {
 			LOG_ERR("Unable to alloc video buffer");
 			return 0;
 		}
-		buffers[i]->type = type;
-		video_enqueue(video_dev, buffers[i]);
+		vbuf->type = type;
+		video_enqueue(video_dev, vbuf);
 	}
 
 	/* Start video capture */
@@ -316,7 +318,9 @@ int main(void)
 			frame++, vbuf->bytesused, vbuf->timestamp);
 
 #ifdef CONFIG_TEST
-		if (is_colorbar_ok(vbuf->buffer, fmt)) {
+		if (tp_set_ret < 0) {
+			LOG_DBG("Test pattern control was not successful. Skip test");
+		} else if (is_colorbar_ok(vbuf->buffer, fmt)) {
 			LOG_DBG("Pattern OK!\n");
 		}
 #endif

@@ -48,8 +48,6 @@ LOG_MODULE_REGISTER(mpu);
 #define PMP_NA4_SUPPORTED	!IS_ENABLED(CONFIG_PMP_NO_NA4)
 #define PMP_NAPOT_SUPPORTED	!IS_ENABLED(CONFIG_PMP_NO_NAPOT)
 
-#define PMPCFG_STRIDE sizeof(unsigned long)
-
 #define PMP_ADDR(addr)			((addr) >> 2)
 #define NAPOT_RANGE(size)		(((size) - 1) >> 1)
 #define PMP_ADDR_NAPOT(addr, size)	PMP_ADDR(addr | NAPOT_RANGE(size))
@@ -104,6 +102,72 @@ static void print_pmp_entries(unsigned int pmp_start, unsigned int pmp_end,
 	}
 }
 
+/**
+ * @brief Reads the PMP configuration CSRs (pmpcfgX) based on architecture and slot count.
+ *
+ * This helper function abstracts the logic required to read the correct CSRs
+ * (pmpcfg0, pmpcfg1, pmpcfg2, pmpcfg3) depending on whether the system is
+ * 32-bit or 64-bit and the total number of PMP slots configured.
+ *
+ * @param pmp_cfg Pointer to the array where the CSR contents will be stored.
+ * @param pmp_cfg_size The size of the pmp_cfg array, measured in unsigned long entries.
+ */
+static inline void z_riscv_pmp_read_config(unsigned long *pmp_cfg, size_t pmp_cfg_size)
+{
+	__ASSERT(pmp_cfg_size == (size_t)(CONFIG_PMP_SLOTS / PMPCFG_STRIDE),
+		 "Invalid PMP config array size");
+
+#ifdef CONFIG_64BIT
+	/* RV64: pmpcfg0 holds entries 0-7; pmpcfg2 holds entries 8-15. */
+	pmp_cfg[0] = csr_read(pmpcfg0);
+#if CONFIG_PMP_SLOTS > 8
+	pmp_cfg[1] = csr_read(pmpcfg2);
+#endif
+#else
+	/* RV32: Each pmpcfg register holds 4 entries. */
+	pmp_cfg[0] = csr_read(pmpcfg0);
+	pmp_cfg[1] = csr_read(pmpcfg1);
+#if CONFIG_PMP_SLOTS > 8
+	pmp_cfg[2] = csr_read(pmpcfg2);
+	pmp_cfg[3] = csr_read(pmpcfg3);
+#endif
+#endif
+}
+
+/**
+ * @brief Writes the PMP configuration CSRs (pmpcfgX) based on architecture and slot count.
+ *
+ * This helper function abstracts the logic required to write the correct Control and Status
+ * Registers (CSRs)—pmpcfg0, pmpcfg1, etc.—by accounting for whether the system is 32-bit or
+ * 64-bit and the total number of PMP slots configured. It handles the different register
+ * packing schemes between RV32 and RV64.
+ *
+ * @param pmp_cfg Pointer to the array containing the PMP configuration values to be written
+ * to the CSRs.
+ * @param pmp_cfg_size The size of the pmp_cfg array, measured in unsigned long entries.
+ */
+static inline void z_riscv_pmp_write_config(unsigned long *pmp_cfg, size_t pmp_cfg_size)
+{
+	__ASSERT(pmp_cfg_size == (size_t)(CONFIG_PMP_SLOTS / PMPCFG_STRIDE),
+		 "Invalid PMP config array size");
+
+#ifdef CONFIG_64BIT
+	/* RV64: pmpcfg0 holds entries 0-7; pmpcfg2 holds entries 8-15. */
+	csr_write(pmpcfg0, pmp_cfg[0]);
+#if CONFIG_PMP_SLOTS > 8
+	csr_write(pmpcfg2, pmp_cfg[1]);
+#endif
+#else
+	/* RV32: Each pmpcfg register holds 4 entries. */
+	csr_write(pmpcfg0, pmp_cfg[0]);
+	csr_write(pmpcfg1, pmp_cfg[1]);
+#if CONFIG_PMP_SLOTS > 8
+	csr_write(pmpcfg2, pmp_cfg[2]);
+	csr_write(pmpcfg3, pmp_cfg[3]);
+#endif
+#endif
+}
+
 static void dump_pmp_regs(const char *banner)
 {
 	unsigned long pmp_addr[CONFIG_PMP_SLOTS];
@@ -118,20 +182,7 @@ static void dump_pmp_regs(const char *banner)
 
 #undef PMPADDR_READ
 
-#ifdef CONFIG_64BIT
-	pmp_cfg[0] = csr_read(pmpcfg0);
-#if CONFIG_PMP_SLOTS > 8
-	pmp_cfg[1] = csr_read(pmpcfg2);
-#endif
-#else
-	pmp_cfg[0] = csr_read(pmpcfg0);
-	pmp_cfg[1] = csr_read(pmpcfg1);
-#if CONFIG_PMP_SLOTS > 8
-	pmp_cfg[2] = csr_read(pmpcfg2);
-	pmp_cfg[3] = csr_read(pmpcfg3);
-#endif
-#endif
-
+	z_riscv_pmp_read_config(pmp_cfg, (size_t)(CONFIG_PMP_SLOTS / PMPCFG_STRIDE));
 	print_pmp_entries(0, CONFIG_PMP_SLOTS, pmp_addr, pmp_cfg, banner);
 }
 
@@ -335,11 +386,13 @@ static void write_pmp_entries(unsigned int start, unsigned int end,
 	ARRAY_SIZE(thread->arch.u_mode_pmpaddr_regs)
 
 /*
- * This is used to seed thread PMP copies with global m-mode cfg entries
- * sharing the same cfg register. Locked entries aren't modifiable but
+ * Stores the initial values of the pmpcfg CSRs, covering all global
+ * m-mode PMP entries. This array is sized to hold all pmpcfg registers
+ * necessary for CONFIG_PMP_SLOTS. It is used to seed the per-thread
+ * PMP configuration copies. Locked entries aren't modifiable but
  * we could have non-locked entries here too.
  */
-static unsigned long global_pmp_cfg[1];
+static unsigned long global_pmp_cfg[CONFIG_PMP_SLOTS / PMPCFG_STRIDE];
 static unsigned long global_pmp_last_addr;
 
 /* End of global PMP entry range */
@@ -432,12 +485,13 @@ void z_riscv_pmp_init(void)
 	/* Make sure secondary CPUs produced the same values */
 	if (global_pmp_end_index != 0) {
 		__ASSERT(global_pmp_end_index == index, "");
-		__ASSERT(global_pmp_cfg[0] == pmp_cfg[0], "");
+		__ASSERT(global_pmp_cfg[index / PMPCFG_STRIDE] == pmp_cfg[index / PMPCFG_STRIDE],
+			 "");
 		__ASSERT(global_pmp_last_addr == pmp_addr[index - 1], "");
 	}
 #endif
 
-	global_pmp_cfg[0] = pmp_cfg[0];
+	memcpy(global_pmp_cfg, pmp_cfg, sizeof(pmp_cfg));
 	global_pmp_last_addr = pmp_addr[index - 1];
 	global_pmp_end_index = index;
 
@@ -457,9 +511,9 @@ static inline unsigned int z_riscv_pmp_thread_init(unsigned long *pmp_addr,
 	ARG_UNUSED(index_limit);
 
 	/*
-	 * Retrieve pmpcfg0 partial content from global entries.
+	 * Retrieve the pmpcfg register with partial content from global entries.
 	 */
-	pmp_cfg[0] = global_pmp_cfg[0];
+	memcpy(pmp_cfg, global_pmp_cfg, sizeof(global_pmp_cfg));
 
 	/*
 	 * Retrieve the pmpaddr value matching the last global PMP slot.
@@ -539,8 +593,8 @@ void z_riscv_pmp_stackguard_enable(struct k_thread *thread)
 void z_riscv_pmp_stackguard_disable(void)
 {
 
-	unsigned long pmp_addr[PMP_M_MODE_SLOTS];
-	unsigned long pmp_cfg[PMP_M_MODE_SLOTS / sizeof(unsigned long)];
+	unsigned long pmp_addr[CONFIG_PMP_SLOTS];
+	unsigned long pmp_cfg[CONFIG_PMP_SLOTS / PMPCFG_STRIDE];
 	unsigned int index = global_pmp_end_index;
 
 	/* Retrieve the pmpaddr value matching the last global PMP slot. */
@@ -721,6 +775,8 @@ int arch_mem_domain_init(struct k_mem_domain *domain)
 int arch_mem_domain_partition_add(struct k_mem_domain *domain,
 				  uint32_t partition_id)
 {
+	ARG_UNUSED(partition_id);
+
 	/* Force resynchronization for every thread using this domain */
 	domain->arch.pmp_update_nr += 1;
 	return 0;
@@ -729,6 +785,8 @@ int arch_mem_domain_partition_add(struct k_mem_domain *domain,
 int arch_mem_domain_partition_remove(struct k_mem_domain *domain,
 				     uint32_t partition_id)
 {
+	ARG_UNUSED(partition_id);
+
 	/* Force resynchronization for every thread using this domain */
 	domain->arch.pmp_update_nr += 1;
 	return 0;
@@ -743,6 +801,8 @@ int arch_mem_domain_thread_add(struct k_thread *thread)
 
 int arch_mem_domain_thread_remove(struct k_thread *thread)
 {
+	ARG_UNUSED(thread);
+
 	return 0;
 }
 

@@ -18,7 +18,7 @@
 /**
  * @brief State Machine Framework API
  * @defgroup smf State Machine Framework API
- * @version 0.1.0
+ * @version 0.2.0
  * @ingroup os_services
  * @{
  */
@@ -179,6 +179,36 @@ void smf_set_terminate(struct smf_ctx *ctx, int32_t val);
  *			   termination of the state machine.
  */
 int32_t smf_run_state(struct smf_ctx *ctx);
+
+/**
+ * @brief Get the current leaf state.
+ *
+ * @note This may be a PARENT state if the HSM is malformed
+ *		 (i.e. the initial transitions are not set up correctly).
+ *
+ * @param ctx State machine context
+ * @return    The current leaf state.
+ */
+static inline const struct smf_state *smf_get_current_leaf_state(const struct smf_ctx *const ctx)
+{
+	return ctx->current;
+}
+
+/**
+ * @brief Get the state that is currently executing. This may be a parent state.
+ *
+ * @param ctx State machine context
+ * @return    The state that is currently executing.
+ */
+static inline const struct smf_state *
+smf_get_current_executing_state(const struct smf_ctx *const ctx)
+{
+#ifdef CONFIG_SMF_ANCESTOR_SUPPORT
+	return ctx->executing;
+#else
+	return ctx->current;
+#endif /* CONFIG_SMF_ANCESTOR_SUPPORT */
+}
 
 #ifdef __cplusplus
 }
