@@ -45,7 +45,7 @@ void set_interrupt_pin(const struct device *dev, enum ism330bx_interrupt_pins in
 static int ism330bx_enable_wake_up_int(const struct device *dev, int enable)
 {
 	const struct ism330bx_config *cfg = dev->config;
-	stmdev_ctx_t *ctx = (stmdev_ctx_t *)ism330bx_data->ism330bx_spi_data.ctx;
+	stmdev_ctx_t *ctx = ism330bx_data->ctx;
 	int ret;
 
 	if (enable) {
@@ -114,7 +114,7 @@ static int ism330bx_enable_significant_motion_int(const struct device *dev, int 
 {
 	const struct ism330bx_config *cfg = dev->config;
 	struct ism330bx_data *ism330bx_data = dev->data;
-	stmdev_ctx_t *ctx = (stmdev_ctx_t *)ism330bx_data->ism330bx_spi_data.ctx;
+	stmdev_ctx_t *ctx = ism330bx_data->ctx;
 	int ret;
 	ism330bx_pin_int_route_t val;
 
@@ -164,7 +164,7 @@ static int ism330bx_enable_six_d_int(const struct device *dev, int enable)
 {
 	const struct ism330bx_config *cfg = dev->config;
 	struct ism330bx_data *ism330bx_data = dev->data;
-	stmdev_ctx_t *ctx = (stmdev_ctx_t *)ism330bx_data->ism330bx_spi_data.ctx;
+	stmdev_ctx_t *ctx = ism330bx_data->ctx;
 	int ret;
 	ism330bx_pin_int_route_t val;
 
@@ -187,7 +187,7 @@ static int ism330bx_enable_xl_int(const struct device *dev, int enable)
 {
 	const struct ism330bx_config *cfg = dev->config;
 	struct ism330bx_data *ism330bx_data = dev->data;
-	stmdev_ctx_t *ctx = (stmdev_ctx_t *)ism330bx_data->ism330bx_spi_data.ctx;
+	stmdev_ctx_t *ctx = ism330bx_data->ctx;
 	int ret = 0;
 
 	if (enable) {
@@ -216,7 +216,7 @@ static int ism330bx_enable_g_int(const struct device *dev, int enable)
 		ism330bx_gy_mode_t gy_mode;
 		ret += ism330bx_gy_mode_get(ctx, &gy_mode);
 		if (gy_mode == ISM330BX_GY_SLEEP_MD) {
-			LOG_WRN("gyro is in sleep mode. It will not trigger interrupts")
+			LOG_WRN("gyro is in sleep mode. It will not trigger interrupts");
 		}
 
 		int16_t buf[3];
@@ -236,7 +236,7 @@ void set_interrupt_pin(const struct device *dev, enum ism330bx_interrupt_pins in
 	int ret = 0;
 	const struct ism330bx_config *cfg = dev->config;
 	struct ism330bx_data *ism330bx_data = dev->data;
-	stmdev_ctx_t *ctx = (stmdev_ctx_t *)ism330bx_data->ism330bx_spi_data.ctx;
+	stmdev_ctx_t *ctx = ism330bx_data->ctx;
 	ism330bx_pin_int_route_t interrupt_flags;
 	if (cfg->drdy_pin == 1) {
 		ret = ism330bx_pin_int1_route_get(ctx, &interrupt_flags);

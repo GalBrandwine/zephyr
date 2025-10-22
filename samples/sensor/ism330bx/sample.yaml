@@ -2,6 +2,7 @@ sample:
   name: ISM330BX accelerometer and gyrometer sensor
 tests:
   sample.sensor.ism330bx:
+    sysbuild: true
     harness: console
     tags: sensors
     depends_on: ism330bx

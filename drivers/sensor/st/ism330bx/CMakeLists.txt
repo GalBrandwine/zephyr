@@ -6,6 +6,12 @@
 #
 zephyr_library()
 zephyr_library_sources_ifdef(CONFIG_ISM330BX ism330bx.c)
+if(CONFIG_ISM330BX AND CONFIG_SPI)
+    zephyr_library_sources(ism330bx_spi.c)
+endif()
+if(CONFIG_ISM330BX AND CONFIG_I2C)
+    zephyr_library_sources(ism330bx_i2c.c)
+endif()
 zephyr_library_sources_ifdef(CONFIG_ISM330BX_LOG_LEVEL_DBG ism330bx_devtools.c)
 zephyr_library_sources_ifdef(CONFIG_ISM330BX_SENSORHUB  ism330bx_shub.c)
 zephyr_library_sources_ifdef(CONFIG_ISM330BX_TRIGGER    ism330bx_trigger.c)

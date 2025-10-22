@@ -97,6 +97,12 @@ struct ism330bx_data {
 	uint8_t shub_ext[ISM330BX_SHUB_MAX_NUM_TARGETS];
 #endif /* CONFIG_ISM330BX_SENSORHUB */
 
+	stmdev_ctx_t *ctx;
+#if DT_ANY_INST_ON_BUS_STATUS_OKAY(i2c)
+	stmdev_ctx_t ctx_i2c;
+#elif DT_ANY_INST_ON_BUS_STATUS_OKAY(spi)
+	stmdev_ctx_t ctx_spi;
+#endif
 	uint8_t accel_freq;
 	uint8_t accel_fs;
 	uint8_t gyro_freq;

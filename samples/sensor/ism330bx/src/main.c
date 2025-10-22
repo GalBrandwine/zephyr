@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 #include <stdio.h>
@@ -100,6 +101,20 @@ int main(void)
 		return 0;
 	}
 
+	static const struct gpio_dt_spec ism330bx_power =
+		GPIO_DT_SPEC_GET_OR(DT_NODELABEL(ism330bx_on), gpios, {0});
+	if (!device_is_ready(ism330bx_power.port)) {
+		printk("power: device not ready.\n");
+		return 0;
+	}
+	gpio_pin_configure_dt(&ism330bx_power, GPIO_OUTPUT_INACTIVE);
+	int ret = gpio_pin_set_dt(&ism330bx_power, 0);
+	if (ret < 0) {
+		printk("Error %d: Failed to set pin %d to high\n", ret, ism330bx_power.pin);
+		// Handle error
+	} else {
+		printk("Successfully set pin %d to high (1)\n", ism330bx_power.pin);
+	}
 	/* set accel/gyro sampling frequency to 60 Hz */
 	odr_attr.val1 = 60;
 	odr_attr.val2 = 0;

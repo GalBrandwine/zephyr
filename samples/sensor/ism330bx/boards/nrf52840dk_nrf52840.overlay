@@ -3,11 +3,11 @@
 / {
 	model = "ISM sample board";
 
-  ism330bx_en: ism330bx_en {
-     status = "okay";
-     compatible = "nordic,gpio-pins";
-    gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>; // Example: GPIO port 0, pin 13, active high
-};
+	ism330bx_on: ism330bx-on {
+                compatible = "nordic,gpio-pins";
+                gpios = <&gpio1 1 GPIO_ACTIVE_LOW>;
+                status = "okay";
+        };
 };
 
 
